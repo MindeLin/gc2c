@@ -26,11 +26,9 @@ const saveMenu = async () => {
   if (!form.value.title) return alert('Please enter a title')
   if (form.value.items.length === 0) return alert('Please add at least one item')
 
-  const shareToken = Math.random().toString(36).substring(2, 10)
-  
   // 1. Create Menu
   try {
-    const menu = await api.post('/menus', {
+    await api.post('/menus', {
       ownerId: userStore.user.userId,
       title: form.value.title,
       companyName: form.value.company_name,

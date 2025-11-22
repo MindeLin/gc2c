@@ -44,7 +44,7 @@ const exportOrders = async (menuId: string) => {
 
   // Simple CSV Export
   const headers = ['Buyer', 'Total Price', 'Items']
-  const rows = orders.map(o => {
+  const rows = orders.map((o: any) => {
     const items = o.content ? o.content.map((i: any) => `${i.name} x${i.quantity}`).join('; ') : ''
     return [o.buyer_name, o.total_price, items]
   })
@@ -55,6 +55,10 @@ const exportOrders = async (menuId: string) => {
   link.href = URL.createObjectURL(blob)
   link.download = `orders_${menuId}.csv`
   link.click()
+  } catch (e) {
+    console.error(e)
+    alert('Failed to export orders')
+  }
 }
 
 onMounted(() => {
