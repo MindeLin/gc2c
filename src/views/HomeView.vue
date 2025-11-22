@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { useRouter } from 'vue-router'
 import { Plus, Share2, FileText, LogOut } from 'lucide-vue-next'
 
@@ -14,14 +14,11 @@ const fetchMenus = async () => {
   if (!userStore.user?.userId) return
   
   loading.value = true
-  const { data, error } = await supabase
-    .from('menus')
-    .select('*, orders(count), menu_items(count)')
-    .eq('owner_id', userStore.user.userId)
-    .order('created_at', { ascending: false })
-    
-  if (!error && data) {
+  try {
+    const data = await api.get('/menus', { userId: userStore.user.userId })
     menus.value = data
+  } catch (e) {
+    console.error(e)
   }
   loading.value = false
 }
@@ -37,15 +34,13 @@ const copyLink = (token: string) => {
 }
 
 const exportOrders = async (menuId: string) => {
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('menu_id', menuId)
+  try {
+    const orders = await api.get(`/menus/${menuId}/orders`)
     
-  if (!orders || orders.length === 0) {
-    alert('No orders to export')
-    return
-  }
+    if (!orders || orders.length === 0) {
+      alert('No orders to export')
+      return
+    }
 
   // Simple CSV Export
   const headers = ['Buyer', 'Total Price', 'Items']

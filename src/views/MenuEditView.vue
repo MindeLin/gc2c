@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { useUserStore } from '@/stores/user'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next'
 
@@ -29,40 +29,18 @@ const saveMenu = async () => {
   const shareToken = Math.random().toString(36).substring(2, 10)
   
   // 1. Create Menu
-  const { data: menu, error: menuError } = await supabase
-    .from('menus')
-    .insert({
-      owner_id: userStore.user.userId,
+  try {
+    const menu = await api.post('/menus', {
+      ownerId: userStore.user.userId,
       title: form.value.title,
-      company_name: form.value.company_name,
-      share_token: shareToken
+      companyName: form.value.company_name,
+      items: form.value.items
     })
-    .select()
-    .single()
-
-  if (menuError) {
-    console.error(menuError)
-    alert('Error creating menu')
-    return
-  }
-
-  // 2. Create Items
-  const itemsToInsert = form.value.items.map(item => ({
-    menu_id: menu.id,
-    name: item.name,
-    price: item.price,
-    description: item.description
-  }))
-
-  const { error: itemsError } = await supabase
-    .from('menu_items')
-    .insert(itemsToInsert)
-
-  if (itemsError) {
-    console.error(itemsError)
-    alert('Error creating items')
-  } else {
+    
     router.push('/')
+  } catch (e) {
+    console.error(e)
+    alert('Error creating menu')
   }
 }
 </script>

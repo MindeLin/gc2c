@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { ShoppingBag, Check } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -17,26 +17,13 @@ const cart = ref<Record<string, number>>({}) // itemId -> quantity
 
 const fetchMenu = async () => {
   loading.value = true
-  const { data: menuData, error } = await supabase
-    .from('menus')
-    .select('*')
-    .eq('share_token', token)
-    .single()
-    
-  if (error || !menuData) {
+  try {
+    const data = await api.get(`/menus/${token}`)
+    menu.value = data.menu
+    items.value = data.items
+  } catch (e) {
     alert('Menu not found')
-    loading.value = false
-    return
   }
-  
-  menu.value = menuData
-  
-  const { data: itemsData } = await supabase
-    .from('menu_items')
-    .select('*')
-    .eq('menu_id', menuData.id)
-    
-  items.value = itemsData || []
   loading.value = false
 }
 
@@ -72,19 +59,16 @@ const submitOrder = async () => {
     }
   })
 
-  const { error } = await supabase
-    .from('orders')
-    .insert({
-      menu_id: menu.value.id,
-      buyer_name: buyerName.value,
-      total_price: totalPrice.value,
+  try {
+    await api.post('/orders', {
+      menuId: menu.value.id,
+      buyerName: buyerName.value,
+      totalPrice: totalPrice.value,
       content: orderContent
     })
-
-  if (error) {
-    alert('Failed to submit order')
-  } else {
     submitted.value = true
+  } catch (e) {
+    alert('Failed to submit order')
   }
 }
 

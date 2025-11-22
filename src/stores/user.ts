@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import liff from '@line/liff'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 
 export const useUserStore = defineStore('user', () => {
     const user = ref<any>(null)
@@ -24,11 +24,11 @@ export const useUserStore = defineStore('user', () => {
                 isLoggedIn.value = true
                 localStorage.setItem('line_user', JSON.stringify(profile))
 
-                // Sync to Supabase
-                await supabase.from('profiles').upsert({
-                    id: profile.userId,
-                    display_name: profile.displayName,
-                    avatar_url: profile.pictureUrl
+                // Sync to Backend
+                await api.post('/auth/login', {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl
                 })
             } else {
                 // Auto login if not logged in (optional, or manual trigger)
